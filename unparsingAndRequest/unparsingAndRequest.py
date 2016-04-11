@@ -112,8 +112,9 @@ def requestData():
                     requestFinished = True
     finally:
         myLock.release()
-        timer = threading.Timer(0.15,requestData)
-    rawStringQueue.push(returnedString)
+        rawStringQueue.push(returnedString)
+        timer = threading.Timer(0.1,requestData)
+    
 
 def unparsing():
     global rawstringqueue,mylock
@@ -338,8 +339,11 @@ def concat (list): # to convert a list to an integer
 
 
 threads = []
-t1 = threading.Thread(target = unparsing, args = ('unparsing',))
+t1 = threading.Thread(target = unparsing, args = ('requestData',))
 threads.append(t1)
+
+#t1 = threading.Thread(target = unparsing, args = ('unparsing',))
+#threads.append(t1)
 t2 = threading.Thread(target = control, args = ('control',))
 threads.append(t2)
 #t3 = threading.Thread(target = requestData, args = ('requestData',))
@@ -354,36 +358,6 @@ if __name__ == '__main__':
         #t.setDaemon(False)
         t.start()
     requestData()
-
-
-
-
-
-
-
-
-
-#(((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
-
-
-
-
-
-
-
-
-#characterCounter = 0
-#testString = 'ER1234!!'
-#strToken = testString[characterCounter:characterCounter+2]
-#characterCounter += 2
-#while strToken != '!!':
-#    if strToken == 'EL':
-#        print(int(testString[characterCounter:characterCounter+4]))
-#        characterCounter += 4
-#    elif strToken == 'ER':
-#        print(int(testString[characterCounter:characterCounter+4]))
-#        characterCounter += 4
-#    strToken = testString[characterCounter:characterCounter+2]
 
 
 
