@@ -53,6 +53,11 @@ class Queue:
             return self.items[0]
     def size(self):
         return len(self.items)
+    def copy(self):
+        tempQueue = Queue(self.items)
+        return tempQueue
+    def clear(self):
+        self.items = []
 
 
 myQueue = Queue()
@@ -117,173 +122,183 @@ def requestData():
     
 
 def unparsing():
-    global rawstringqueue,mylock
-    mylock.acquire()
+    global rawStringQueue,mylock
     while True:
+        while rawStringQueue.isEmpty():
+            pass
+
+        mylock.acquire()
         try:
-            while not rawstringqueue.isempty():
-                charactercounter = 0
-                tempstr = rawstringqueue.pop()
-                strtoken = tempstr[charactercounter:charactercounter+2]
-                while strtoken != '!!':
-                    charactercounter += 2
-                    if strtoken == 'EL':
-                        left = charactercounter
-                        right = charactercounter
-                        for i in range(charactercounter,len(tempstr)):
-                            
-                            if not tempstr[i].isdigit():
-                               
-                                right = i
-                                break
-
-                        #print(tempstr[left:right],'watchpoint3')
-                        EncoderLeft.push(int(tempstr[left:right]))
-                        charactercounter = right
-                    elif strtoken == 'ER':
-                        left = charactercounter
-                        right = charactercounter
-                        for i in range(charactercounter,len(tempstr)):
-                            
-                            if not tempstr[i].isdigit():
-                      
-                                right = i
-                                break
-
-                        EncoderRight.push(int(tempstr[left:right]))
-                        charactercounter = right
-                    elif strtoken == 'AX':
-                        left = charactercounter
-                        right = charactercounter
-                        for i in range(charactercounter,len(tempstr)):
-                            
-                            if(tempstr[i].isalpha() or tempstr[i] == '!'):
-                                right = i
-                                break
-
-
-                        AccelerometerX.push(float(tempstr[left:right]))
-                        charactercounter = right
-                    elif strtoken == 'AY':
-                        left = charactercounter
-                        right = charactercounter
-                        for i in range(charactercounter,len(tempstr)):
-                            
-                            if(tempstr[i].isalpha() or tempstr[i] == '!'):
-                                right = i
-                                break    
-
-
-                        AccelerometerY.push(float(tempstr[left:right]))
-                        charactercounter = right
-                    elif strtoken == 'AZ':
-                        left = charactercounter
-                        right = charactercounter
-                        for i in range(charactercounter,len(tempstr)):
-                            
-                            if(tempstr[i].isalpha() or tempstr[i] == '!'):
-                                right = i
-                                break    
-
-
-                        AccelerometerZ.push(float(tempstr[left:right]))
-                        charactercounter = right
-                    elif strtoken == 'MX':
-                        left = charactercounter
-                        right = charactercounter
-                        for i in range(charactercounter,len(tempstr)):
-                            
-                            if(tempstr[i].isalpha() or tempstr[i] == '!'):
-                                right = i
-                                break    
-
-
-                        MagnetometerX.push(float(tempstr[left:right]))
-                        charactercounter = right
-                    elif strtoken == 'MY':
-                        left = charactercounter
-                        right = charactercounter
-                        for i in range(charactercounter,len(tempstr)):
-                            
-                            if(tempstr[i].isalpha() or tempstr[i] == '!'):
-                                right = i
-                                break    
-
-
-                        MagnetometerY.push(float(tempstr[left:right]))
-                        charactercounter = right
-
-                    elif strtoken == 'MZ':
-                        left = charactercounter
-                        right = charactercounter
-                        for i in range(charactercounter,len(tempstr)):
-                            
-                            if(tempstr[i].isalpha() or tempstr[i] == '!'):
-                                right = i
-                                break
-
-                        MagnetometerZ.push(float(tempstr[left:right]))
-                        charactercounter = right
-                    elif strtoken == 'GX':
-                        degreeLen = 2
-                        GPSLatitudeDegree.push(int(tempstr[charactercounter:charactercounter+degreeLen]))
-                        GPSLatitudeMinute.push(float(tempstr[charactercounter+degreeLen:charactercounter+degreeLen+6]))
-                        
-                        charactercounter += degreeLen+6
-                        GPSLatitudeDirection.push(tempstr[charactercounter])
-                        charactercounter =charactercounter+1
-                    elif strtoken == 'GY':
-                        degreeLen = 3
-                        GPSLongitudeDegree.push(int(tempstr[charactercounter:charactercounter+degreeLen]))
-                        GPSLongitudeMinute.push(float(tempstr[charactercounter+degreeLen:charactercounter+degreeLen+6]))
-                        
-                        charactercounter += degreeLen+6
-                        GPSLongitudeDirection.push(tempstr[charactercounter])
-                        charactercounter =charactercounter+1
-                    elif strtoken == 'GZ':
-                        left = charactercounter
-                        right = charactercounter
-                        for i in range(charactercounter,len(tempstr)):
-                            
-                            if(tempstr[i].isalpha() or tempstr[i] == '!'):
-                                right = i
-                                break
-
-                        GPSAltitude.push(float(tempstr[left:right]))
-                        charactercounter = right
-                    elif strtoken == 'GS':
-                        left = charactercounter
-                        right = charactercounter
-                        for i in range(charactercounter,len(tempstr)):
-                            
-                            if(tempstr[i].isalpha() or tempstr[i] == '!'):
-                                right = i
-
-                                break
-                        GPSSpeed.push(float(tempstr[left:right]))
-                        charactercounter = right
-                    elif strtoken == 'GT':
-                        pass #Time format is unknow, might be xx.xx.xx
-                        #GPSTime.push(tempstr[charactercounter:charactercounter+8])
-
-                    elif strtoken == 'TE':
-                        left = charactercounter
-                        right = charactercounter
-                        for i in range(charactercounter,len(tempstr)):
-                            
-                            if(tempstr[i].isalpha() or tempstr[i] == '!'):
-                                right = i
-                                break
-
-                        Temperature.push(float(tempstr[left:right]))
-                        charactercounter = right
-                    elif strtoken == 'TS':
-                        Timestamp.push(tempstr[charactercounter:charactercounter+8])
-                        charactercounter = charactercounter + 8
-                    strtoken = tempstr[charactercounter:charactercounter+2]
-
+            copyOfrawStringQueue = rawStringQueue.copy()
+            rawStringQueue.clear()
         finally:
             myLock.release()
+    
+        
+        while not copyOfrawStringQueue.isempty():
+            charactercounter = 0
+            tempstr = copyOfrawStringQueue.pop()
+            strtoken = tempstr[charactercounter:charactercounter+2]
+            while strtoken != '!!':
+                charactercounter += 2
+                if strtoken == 'EL':
+                    left = charactercounter
+                    right = charactercounter
+                    for i in range(charactercounter,len(tempstr)):
+                            
+                        if not tempstr[i].isdigit():
+                               
+                            right = i
+                            break
+
+                    #print(tempstr[left:right],'watchpoint3')
+                    EncoderLeft.push(int(tempstr[left:right]))
+                    charactercounter = right
+                elif strtoken == 'ER':
+                    left = charactercounter
+                    right = charactercounter
+                    for i in range(charactercounter,len(tempstr)):
+                            
+                        if not tempstr[i].isdigit():
+                      
+                            right = i
+                            break
+
+                    EncoderRight.push(int(tempstr[left:right]))
+                    charactercounter = right
+                elif strtoken == 'AX':
+                    left = charactercounter
+                    right = charactercounter
+                    for i in range(charactercounter,len(tempstr)):
+                            
+                        if(tempstr[i].isalpha() or tempstr[i] == '!'):
+                            right = i
+                            break
+
+
+                    AccelerometerX.push(float(tempstr[left:right]))
+                    charactercounter = right
+                elif strtoken == 'AY':
+                    left = charactercounter
+                    right = charactercounter
+                    for i in range(charactercounter,len(tempstr)):
+                            
+                        if(tempstr[i].isalpha() or tempstr[i] == '!'):
+                            right = i
+                            break    
+
+
+                    AccelerometerY.push(float(tempstr[left:right]))
+                    charactercounter = right
+                elif strtoken == 'AZ':
+                    left = charactercounter
+                    right = charactercounter
+                    for i in range(charactercounter,len(tempstr)):
+                            
+                        if(tempstr[i].isalpha() or tempstr[i] == '!'):
+                            right = i
+                            break    
+
+
+                    AccelerometerZ.push(float(tempstr[left:right]))
+                    charactercounter = right
+                elif strtoken == 'MX':
+                    left = charactercounter
+                    right = charactercounter
+                    for i in range(charactercounter,len(tempstr)):
+                            
+                        if(tempstr[i].isalpha() or tempstr[i] == '!'):
+                            right = i
+                            break    
+
+
+                    MagnetometerX.push(float(tempstr[left:right]))
+                    charactercounter = right
+                elif strtoken == 'MY':
+                    left = charactercounter
+                    right = charactercounter
+                    for i in range(charactercounter,len(tempstr)):
+                            
+                        if(tempstr[i].isalpha() or tempstr[i] == '!'):
+                            right = i
+                            break    
+
+
+                    MagnetometerY.push(float(tempstr[left:right]))
+                    charactercounter = right
+
+                elif strtoken == 'MZ':
+                    left = charactercounter
+                    right = charactercounter
+                    for i in range(charactercounter,len(tempstr)):
+                            
+                        if(tempstr[i].isalpha() or tempstr[i] == '!'):
+                            right = i
+                            break
+
+                    MagnetometerZ.push(float(tempstr[left:right]))
+                    charactercounter = right
+                elif strtoken == 'GX':
+                    degreeLen = 2
+                    GPSLatitudeDegree.push(int(tempstr[charactercounter:charactercounter+degreeLen]))
+                    GPSLatitudeMinute.push(float(tempstr[charactercounter+degreeLen:charactercounter+degreeLen+6]))
+                        
+                    charactercounter += degreeLen+6
+                    GPSLatitudeDirection.push(tempstr[charactercounter])
+                    charactercounter =charactercounter+1
+                elif strtoken == 'GY':
+                    degreeLen = 3
+                    GPSLongitudeDegree.push(int(tempstr[charactercounter:charactercounter+degreeLen]))
+                    GPSLongitudeMinute.push(float(tempstr[charactercounter+degreeLen:charactercounter+degreeLen+6]))
+                        
+                    charactercounter += degreeLen+6
+                    GPSLongitudeDirection.push(tempstr[charactercounter])
+                    charactercounter =charactercounter+1
+                elif strtoken == 'GZ':
+                    left = charactercounter
+                    right = charactercounter
+                    for i in range(charactercounter,len(tempstr)):
+                            
+                        if(tempstr[i].isalpha() or tempstr[i] == '!'):
+                            right = i
+                            break
+
+                    GPSAltitude.push(float(tempstr[left:right]))
+                    charactercounter = right
+                elif strtoken == 'GS':
+                    left = charactercounter
+                    right = charactercounter
+                    for i in range(charactercounter,len(tempstr)):
+                            
+                        if(tempstr[i].isalpha() or tempstr[i] == '!'):
+                            right = i
+
+                            break
+                    GPSSpeed.push(float(tempstr[left:right]))
+                    charactercounter = right
+                elif strtoken == 'GT':
+                    pass #Time format is unknow, might be xx.xx.xx
+                    #GPSTime.push(tempstr[charactercounter:charactercounter+8])
+
+                elif strtoken == 'TE':
+                    left = charactercounter
+                    right = charactercounter
+                    for i in range(charactercounter,len(tempstr)):
+                            
+                        if(tempstr[i].isalpha() or tempstr[i] == '!'):
+                            right = i
+                            break
+
+                    Temperature.push(float(tempstr[left:right]))
+                    charactercounter = right
+                elif strtoken == 'TS':
+                    Timestamp.push(tempstr[charactercounter:charactercounter+8])
+                    charactercounter = charactercounter + 8
+                strtoken = tempstr[charactercounter:charactercounter+2]
+
+        control()
+
+        
         
 
 
@@ -292,51 +307,38 @@ def unparsing():
 def control(func):
     global myLock,EncoderLeft,EncoderRight
     i = 1
-    while True:# or while 1:
-    #for temp in range(10):
-        if i == 10:
-            # If array size limit reached save the last data as zeroth element and continue
-            X[0] = X[9]
-            Y[0] = Y[9]
-            Phi[0] = Phi[9]
-            i = 1
-        while EncoderLeft.isEmpty():
-            pass
-        myLock.acquire()
-        try:
-            while not EncoderLeft.isEmpty():
-                #This is removing the offset. An reading of 5000 means 0 ticks, 4000 means 1000 ticks in reverse direction, 6000
-                #vice versa
-                ticks_left = 5000 - EncoderLeft.pop() #assuming Queue stores right,left,.....
-                ticks_right = 5000 - EncoderRight.pop()
+    if i == 10:
+        # If array size limit reached save the last data as zeroth element and continue
+        X[0] = X[9]
+        Y[0] = Y[9]
+        Phi[0] = Phi[9]
+        i = 1
+    if EncoderLeft.isEmpty():
+        pass
+    else:
+        while not EncoderLeft.isEmpty():
+            #This is removing the offset. An reading of 5000 means 0 ticks, 4000 means 1000 ticks in reverse direction, 6000
+            #vice versa
+            ticks_left = 5000 - EncoderLeft.pop() #assuming Queue stores right,left,.....
+            ticks_right = 5000 - EncoderRight.pop()
 
-                SL = ((2*pi*RADIUS*ticks_left)/TLMAX)
-                SR = ((2*pi*RADIUS*ticks_right)/TRMAX)
-                if SL != SR:
-                    K = (SL + SR)/(SL - SR)
-                    del_Phi[i] = ((SL - SR)/WIDTH)# what is del_Phi?
-                    Phi[i] = del_Phi[i] + Phi[i-1]
-                    X[i] = X[i-1] - ((WIDTH/2)*K*(math.cos(Phi[i]) - math.cos(Phi[i-1])))
-                    Y[i] = Y[i-1] + ((WIDTH/2)*K*(math.sin(Phi[i]) - math.sin(Phi[i-1])))
+            SL = ((2*pi*RADIUS*ticks_left)/TLMAX)
+            SR = ((2*pi*RADIUS*ticks_right)/TRMAX)
+            if SL != SR:
+                K = (SL + SR)/(SL - SR)
+                del_Phi[i] = ((SL - SR)/WIDTH)# what is del_Phi?
+                Phi[i] = del_Phi[i] + Phi[i-1]
+                X[i] = X[i-1] - ((WIDTH/2)*K*(math.cos(Phi[i]) - math.cos(Phi[i-1])))
+                Y[i] = Y[i-1] + ((WIDTH/2)*K*(math.sin(Phi[i]) - math.sin(Phi[i-1])))
 
-                if SL == SR:
-                    Phi[i] = Phi[i-1]
-                    X[i] = X[i-1] + ((((SL+SR)/2)*DT)*(math.sin(Phi[i])))
-                    Y[i] = Y[i-1] + ((((SL+SR)/2)*DT)*(math.cos(Phi[i])))
+            if SL == SR:
+                Phi[i] = Phi[i-1]
+                X[i] = X[i-1] + ((((SL+SR)/2)*DT)*(math.sin(Phi[i])))
+                Y[i] = Y[i-1] + ((((SL+SR)/2)*DT)*(math.cos(Phi[i])))
 
-                i += 1
-        finally:
-            myLock.release()
-            #print(func)
+            i += 1
 
         
-def concat (list): # to convert a list to an integer
-    s= ''.join(map(str,list))
-    return int(s)
-
-
-    
-
 
 threads = []
 t1 = threading.Thread(target = unparsing, args = ('requestData',))
@@ -344,7 +346,7 @@ threads.append(t1)
 
 #t1 = threading.Thread(target = unparsing, args = ('unparsing',))
 #threads.append(t1)
-t2 = threading.Thread(target = control, args = ('control',))
+t2 = threading.Thread(target = control, args = ('unparsing',))#and control
 threads.append(t2)
 #t3 = threading.Thread(target = requestData, args = ('requestData',))
 #threads.append(t2)
@@ -357,7 +359,6 @@ if __name__ == '__main__':
     for t in threads:
         #t.setDaemon(False)
         t.start()
-    requestData()
 
 
 
