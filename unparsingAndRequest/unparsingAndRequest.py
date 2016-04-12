@@ -53,11 +53,10 @@ class Queue:
             return self.items[0]
     def size(self):
         return len(self.items)
-    def copy(self):
-        tempQueue = Queue(self.items)
-        return tempQueue
     def clear(self):
         self.items = []
+    def get(self,index):
+        return self.items[index]
 
 
 myQueue = Queue()
@@ -118,24 +117,28 @@ def requestData():
     finally:
         myLock.release()
         rawStringQueue.push(returnedString)
+    #rawStringQueue.push('EL12434ER1234GX4000.175NGY08234.134WTS00:01:30!!')
         timer = threading.Timer(0.1,requestData)
+        timer.start()
     
 
-def unparsing():
-    global rawStringQueue,mylock
+def unparsing(func):
+    global rawStringQueue,myLock
     while True:
         while rawStringQueue.isEmpty():
             pass
 
-        mylock.acquire()
+        myLock.acquire()
         try:
-            copyOfrawStringQueue = rawStringQueue.copy()
+            copyOfrawStringQueue = Queue();
+            for temp in range(rawStringQueue.size()):
+                copyOfrawStringQueue.push(rawStringQueue.get(temp))
             rawStringQueue.clear()
         finally:
             myLock.release()
     
         
-        while not copyOfrawStringQueue.isempty():
+        while not copyOfrawStringQueue.isEmpty():
             charactercounter = 0
             tempstr = copyOfrawStringQueue.pop()
             strtoken = tempstr[charactercounter:charactercounter+2]
@@ -296,7 +299,7 @@ def unparsing():
                     charactercounter = charactercounter + 8
                 strtoken = tempstr[charactercounter:charactercounter+2]
 
-        control()
+        control('control')
 
         
         
@@ -307,16 +310,17 @@ def unparsing():
 def control(func):
     global myLock,EncoderLeft,EncoderRight
     i = 1
-    if i == 10:
-        # If array size limit reached save the last data as zeroth element and continue
-        X[0] = X[9]
-        Y[0] = Y[9]
-        Phi[0] = Phi[9]
-        i = 1
+    
     if EncoderLeft.isEmpty():
         pass
     else:
         while not EncoderLeft.isEmpty():
+            if i == 10:
+                # If array size limit reached save the last data as zeroth element and continue
+                X[0] = X[9]
+                Y[0] = Y[9]
+                Phi[0] = Phi[9]
+                i = 1
             #This is removing the offset. An reading of 5000 means 0 ticks, 4000 means 1000 ticks in reverse direction, 6000
             #vice versa
             ticks_left = 5000 - EncoderLeft.pop() #assuming Queue stores right,left,.....
@@ -330,29 +334,26 @@ def control(func):
                 Phi[i] = del_Phi[i] + Phi[i-1]
                 X[i] = X[i-1] - ((WIDTH/2)*K*(math.cos(Phi[i]) - math.cos(Phi[i-1])))
                 Y[i] = Y[i-1] + ((WIDTH/2)*K*(math.sin(Phi[i]) - math.sin(Phi[i-1])))
-
+                print('watchPoint1:X[',i,']=',X[i])
+                print('watchPoint1:Y[',i,']=',Y[i])
             if SL == SR:
                 Phi[i] = Phi[i-1]
                 X[i] = X[i-1] + ((((SL+SR)/2)*DT)*(math.sin(Phi[i])))
                 Y[i] = Y[i-1] + ((((SL+SR)/2)*DT)*(math.cos(Phi[i])))
-
+                print('watchPoint1:X[',i,']=',X[i])
+                print('watchPoint1:Y[',i,']=',Y[i])
             i += 1
 
         
 
 threads = []
-t1 = threading.Thread(target = unparsing, args = ('requestData',))
+t1 = threading.Thread(target = requestData, args = ())
 threads.append(t1)
 
-#t1 = threading.Thread(target = unparsing, args = ('unparsing',))
-#threads.append(t1)
-t2 = threading.Thread(target = control, args = ('unparsing',))#and control
+
+t2 = threading.Thread(target = unparsing, args = ('unparsing',))#and control
 threads.append(t2)
-#t3 = threading.Thread(target = requestData, args = ('requestData',))
-#threads.append(t2)
-#def noFunc():
-#    pass
-#Timer = threading.Timer(0.1,noFunc)
+
 
 if __name__ == '__main__':
 
